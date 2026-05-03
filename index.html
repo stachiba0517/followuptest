@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>勉強会後フォロー支援システム MVP</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">MVP Prototype</p>
+        <h1>勉強会後フォロー支援システム</h1>
+      </div>
+      <nav class="top-nav" aria-label="画面切り替え">
+        <button class="nav-button is-active" data-view="form">相談カルテ入力</button>
+        <button class="nav-button" data-view="admin">管理ダッシュボード</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="formView" class="view is-active" aria-labelledby="formTitle">
+        <div class="page-intro">
+          <div>
+            <p class="eyebrow">For participants</p>
+            <h2 id="formTitle">相談カルテ入力フォーム</h2>
+          </div>
+          <p>
+            勉強会後の課題、AI活用したい業務、個別相談の希望を入力します。
+            入力内容はこのブラウザ内だけに保存されます。
+          </p>
+        </div>
+
+        <form id="leadForm" class="form-grid">
+          <section class="form-section">
+            <h3>基本情報</h3>
+            <label>
+              勉強会名
+              <input name="event_name" type="text" value="AI活用勉強会" />
+            </label>
+            <label>
+              氏名 <span class="required">必須</span>
+              <input name="name" type="text" required autocomplete="name" />
+            </label>
+            <label>
+              会社名 / 屋号
+              <input name="company" type="text" autocomplete="organization" />
+            </label>
+            <label>
+              メールアドレス <span class="required">必須</span>
+              <input name="email" type="email" required autocomplete="email" />
+            </label>
+            <label>
+              電話番号
+              <input name="phone" type="tel" autocomplete="tel" />
+            </label>
+          </section>
+
+          <section class="form-section">
+            <h3>事業と課題</h3>
+            <label>
+              業種 <span class="required">必須</span>
+              <select name="industry" required>
+                <option value="">選択してください</option>
+                <option>製造</option>
+                <option>建設</option>
+                <option>士業</option>
+                <option>店舗</option>
+                <option>サービス</option>
+                <option>福祉</option>
+                <option>教育</option>
+                <option>その他</option>
+              </select>
+            </label>
+            <label>
+              その他の業種
+              <input name="industry_other" type="text" />
+            </label>
+            <label>
+              事業規模
+              <select name="business_size">
+                <option value="">未選択</option>
+                <option>1人</option>
+                <option>2〜5人</option>
+                <option>6〜20人</option>
+                <option>21人以上</option>
+              </select>
+            </label>
+            <label class="wide">
+              現在困っていること <span class="required">必須</span>
+              <textarea name="pain" rows="5" required></textarea>
+            </label>
+          </section>
+
+          <section class="form-section form-section-wide">
+            <h3>AI活用と相談意向</h3>
+            <fieldset>
+              <legend>AIで改善したい業務 <span class="required">必須</span></legend>
+              <div class="check-grid">
+                <label><input type="checkbox" name="ai_interest" value="事務" /> 事務</label>
+                <label><input type="checkbox" name="ai_interest" value="発信" /> 発信</label>
+                <label><input type="checkbox" name="ai_interest" value="営業" /> 営業</label>
+                <label><input type="checkbox" name="ai_interest" value="採用" /> 採用</label>
+                <label><input type="checkbox" name="ai_interest" value="資料作成" /> 資料作成</label>
+                <label><input type="checkbox" name="ai_interest" value="顧客対応" /> 顧客対応</label>
+                <label><input type="checkbox" name="ai_interest" value="業務設計" /> 業務設計</label>
+                <label><input type="checkbox" name="ai_interest" value="動画・音声活用" /> 動画・音声活用</label>
+              </div>
+            </fieldset>
+            <label>
+              その他、AIで改善したいこと
+              <input name="ai_interest_other" type="text" />
+            </label>
+            <label>
+              勉強会で特に印象に残ったこと
+              <textarea name="impression" rows="3"></textarea>
+            </label>
+            <label>
+              中村に相談したいこと
+              <textarea name="consultation_topic" rows="3"></textarea>
+            </label>
+            <div class="three-cols">
+              <label>
+                個別相談希望 <span class="required">必須</span>
+                <select name="consultation_need" required>
+                  <option value="">選択してください</option>
+                  <option>希望する</option>
+                  <option>興味あり</option>
+                  <option>今は不要</option>
+                </select>
+              </label>
+              <label>
+                検討時期
+                <select name="timing">
+                  <option value="">未選択</option>
+                  <option>すぐ</option>
+                  <option>1か月以内</option>
+                  <option>3か月以内</option>
+                  <option>未定</option>
+                </select>
+              </label>
+              <label>
+                予算感
+                <select name="budget">
+                  <option value="">未選択</option>
+                  <option>〜5万円</option>
+                  <option>5〜10万円</option>
+                  <option>10〜30万円</option>
+                  <option>30万円以上</option>
+                  <option>未定</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              連絡希望方法
+              <select name="contact_method">
+                <option value="">未選択</option>
+                <option>メール</option>
+                <option>Messenger</option>
+                <option>LINE</option>
+                <option>電話</option>
+              </select>
+            </label>
+            <label class="consent">
+              <input name="privacy_consent" type="checkbox" required />
+              個別相談の案内、提案内容の検討、問い合わせ対応のために入力内容を利用することに同意します。
+            </label>
+            <div class="form-actions">
+              <button type="submit" class="primary">送信する</button>
+              <button type="reset" class="secondary">入力をクリア</button>
+            </div>
+          </section>
+        </form>
+      </section>
+
+      <section id="completeView" class="view" aria-labelledby="completeTitle">
+        <div class="complete-panel">
+          <p class="eyebrow">Completed</p>
+          <h2 id="completeTitle">相談カルテを送信しました</h2>
+          <p>回答ありがとうございます。中村が内容を確認し、必要に応じて個別相談の案内をします。</p>
+          <button class="primary" data-view="form">別の回答を入力する</button>
+        </div>
+      </section>
+
+      <section id="adminView" class="view" aria-labelledby="adminTitle">
+        <div id="adminLock" class="lock-panel">
+          <p class="eyebrow">Admin</p>
+          <h2 id="adminTitle">管理画面</h2>
+          <p>プロトタイプ用の簡易認証です。初期パスコードは <code>nakamura-mvp</code> です。</p>
+          <form id="loginForm" class="login-form">
+            <input id="passcode" type="password" placeholder="パスコード" autocomplete="current-password" />
+            <button type="submit" class="primary">開く</button>
+          </form>
+        </div>
+
+        <div id="adminApp" class="admin-shell" hidden>
+          <aside class="admin-side">
+            <p class="eyebrow">Admin tools</p>
+            <button class="side-button is-active" data-admin-tab="dashboard">ダッシュボード</button>
+            <button class="side-button" data-admin-tab="leads">回答一覧</button>
+            <button class="side-button" data-admin-tab="priority">優先打診</button>
+            <button class="side-button" data-admin-tab="caseLog">案件ログ</button>
+            <button class="side-button" data-admin-tab="menus">メニュー管理</button>
+            <button id="exportCsv" class="side-button">CSV出力</button>
+          </aside>
+          <div class="admin-main" id="adminContent"></div>
+        </div>
+      </section>
+    </main>
+
+    <template id="emptyStateTemplate">
+      <div class="empty-state">
+        <h3>まだ回答がありません</h3>
+        <p>相談カルテ入力フォームから回答を送信すると、ここに表示されます。</p>
+      </div>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
