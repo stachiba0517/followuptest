@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>勉強会後アンケートアプリ MVP</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="setupError" class="setup-error" hidden role="alert"></div>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Seminar follow-up</p>
+        <h1>勉強会後アンケート</h1>
+      </div>
+      <nav class="top-nav" aria-label="画面切り替え">
+        <button class="nav-button is-active" type="button" data-view="form">回答</button>
+        <button class="nav-button" type="button" data-view="admin">管理</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="formView" class="view is-active" aria-labelledby="formTitle">
+        <div class="intro-band">
+          <p class="eyebrow">For participants</p>
+          <h2 id="formTitle">今日の気づきと、次に試したいことを教えてください</h2>
+          <p>回答いただいた内容は、今後の勉強会の品質向上、お問い合わせ対応やサポートのご案内にのみ利用します。</p>
+        </div>
+
+        <form id="surveyForm" class="survey-form">
+          <section class="form-section">
+            <div class="section-title">
+              <span>1</span>
+              <div>
+                <h3>基本情報</h3>
+                <p>あなたのことについて教えてください。</p>
+              </div>
+            </div>
+            <div class="field-grid">
+              <label>
+                お名前 <span class="required">必須</span>
+                <input name="name" type="text" required autocomplete="name" />
+              </label>
+              <label>
+                会社名・屋号 <span class="required">必須</span>
+                <input name="company" type="text" required autocomplete="organization" />
+              </label>
+              <label>
+                メールアドレス <span class="required">必須</span>
+                <input name="email" type="email" required autocomplete="email" />
+              </label>
+              <label>
+                業種 <span class="required">必須</span>
+                <select id="industry" name="industry" required>
+                  <option value="">選択してください</option>
+                  <option>製造</option>
+                  <option>建設</option>
+                  <option>小売</option>
+                  <option>サービス</option>
+                  <option>士業</option>
+                  <option>教育</option>
+                  <option>医療・福祉</option>
+                  <option>個人事業・ひとり社長</option>
+                  <option>その他</option>
+                </select>
+              </label>
+              <label id="industryOtherField" class="wide" hidden>
+                その他の場合の業種
+                <input name="industry_other" type="text" />
+              </label>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <div class="section-title">
+              <span>2</span>
+              <div>
+                <h3>勉強会の感想</h3>
+                <p>印象に残ったことや、自分の仕事に使えそうなことを教えてください。</p>
+              </div>
+            </div>
+            <label>
+              今日の勉強会で、特に印象に残った内容は何でしたか？ <span class="required">必須</span>
+              <textarea name="impression" rows="4" required></textarea>
+            </label>
+            <label>
+              「これは自分の仕事にも使えそう」と思ったAI活用はありましたか？ <span class="required">必須</span>
+              <textarea name="ai_use_scene" rows="4" required placeholder="どんな場面で使えそうかも、わかる範囲でご記入ください。"></textarea>
+            </label>
+          </section>
+
+          <section class="form-section">
+            <div class="section-title">
+              <span>3</span>
+              <div>
+                <h3>日ごろの仕事の詰まりや困りごと</h3>
+                <p>外注するほどではないけれど、毎回めんどうな作業を教えてください。</p>
+              </div>
+            </div>
+            <label>
+              日ごろの仕事で「外注するほどではないけど、毎回めんどくさい」と感じている作業は何ですか？ <span class="required">必須</span>
+              <textarea name="tedious_task" rows="4" required></textarea>
+            </label>
+            <label>
+              その作業は、今どのくらいの頻度で発生していますか？ <span class="required">必須</span>
+              <select name="task_frequency" required>
+                <option value="">選択してください</option>
+                <option>毎日</option>
+                <option>週に数回</option>
+                <option>週1回</option>
+                <option>月1回</option>
+                <option>案件ごと</option>
+                <option>繁忙期だけ</option>
+                <option>その他</option>
+              </select>
+            </label>
+          </section>
+
+          <section class="form-section">
+            <div class="section-title">
+              <span>4</span>
+              <div>
+                <h3>不安と次の一歩</h3>
+                <p>もし、今後のフォローが必要なことがあれば教えてください。</p>
+              </div>
+            </div>
+            <label>
+              AIを使ううえで、今いちばん不安・疑問に感じていることは何ですか？ <span class="required">必須</span>
+              <textarea name="ai_concern" rows="4" required></textarea>
+            </label>
+            <label>
+              今日の内容を受けて、次に試してみたいことはありますか？ <span class="required">必須</span>
+              <textarea name="next_trial" rows="4" required></textarea>
+            </label>
+          </section>
+
+          <section class="form-section">
+            <div class="section-title">
+              <span>5</span>
+              <div>
+                <h3>追加サポートへの興味</h3>
+                <p>あてはまるものを選んでください。</p>
+              </div>
+            </div>
+            <fieldset>
+              <legend>興味があるもの <span class="required">必須</span></legend>
+              <div id="serviceChoices" class="choice-grid"></div>
+            </fieldset>
+            <label id="serviceOtherField" hidden>
+              その他の内容
+              <input name="service_interest_other" type="text" />
+            </label>
+          </section>
+
+          <section class="form-section">
+            <div class="section-title">
+              <span>6</span>
+              <div>
+                <h3>メッセージと確認事項</h3>
+                <p>感想の紹介可否と、回答内容の利用目的について確認させてください。</p>
+              </div>
+            </div>
+            <label>
+              応援や要望メッセージ
+              <textarea name="support_message" rows="4" placeholder="任意です。ご自由にどうぞ。"></textarea>
+            </label>
+            <fieldset>
+              <legend>感想の紹介について <span class="required">必須</span></legend>
+              <p class="field-note">いただいた感想を、今後の勉強会案内やSNS等で紹介してもよい範囲を教えてください。</p>
+              <div class="radio-list">
+                <label><input type="radio" name="testimonial_permission" value="お名前つきで紹介OK" required /> お名前つきで紹介OK</label>
+                <label><input type="radio" name="testimonial_permission" value="イニシャル・匿名ならOK" /> イニシャル・匿名ならOK</label>
+                <label><input type="radio" name="testimonial_permission" value="紹介は控えてください" /> 紹介は控えてください</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>回答内容の利用について <span class="required">必須</span></legend>
+              <p class="field-note">回答いただいた内容は、今後の勉強会の品質向上、お問い合わせ対応やサポートのご案内にのみ利用します。</p>
+              <label class="consent-box">
+                <input type="checkbox" name="privacy_consent" value="同意する" required />
+                <span>上記の利用目的に同意します。</span>
+              </label>
+            </fieldset>
+            <div class="form-actions">
+              <button class="primary" type="submit">回答を送信する</button>
+              <button class="secondary" type="reset">入力をクリア</button>
+            </div>
+          </section>
+        </form>
+      </section>
+
+      <section id="completeView" class="view" aria-labelledby="completeTitle">
+        <div class="complete-panel">
+          <p class="eyebrow">Completed</p>
+          <h2 id="completeTitle">回答ありがとうございます</h2>
+          <p>個別相談をご希望の方には、日程調整のメールをお送りします。</p>
+          <button class="primary" type="button" data-view="form">別の回答を入力する</button>
+        </div>
+      </section>
+
+      <section id="adminView" class="view" aria-labelledby="adminTitle">
+        <div id="adminLock" class="lock-panel">
+          <p class="eyebrow">Admin</p>
+          <h2 id="adminTitle">回答管理</h2>
+          <form id="loginForm" class="login-form">
+            <label>
+              メールアドレス
+              <input id="loginEmail" type="email" autocomplete="username" required />
+            </label>
+            <label>
+              パスワード
+              <input id="loginPassword" type="password" autocomplete="current-password" required />
+            </label>
+            <button class="primary" type="submit">ログイン</button>
+          </form>
+        </div>
+
+        <div id="adminApp" class="admin-shell" hidden>
+          <section class="admin-toolbar">
+            <div>
+              <p class="eyebrow">Responses</p>
+              <h2>回答一覧</h2>
+            </div>
+            <div class="toolbar-actions">
+              <button id="reloadResponses" class="secondary" type="button">再読み込み</button>
+              <button id="exportCsv" class="primary" type="button">CSV出力</button>
+              <button id="logoutButton" class="secondary" type="button">ログアウト</button>
+            </div>
+          </section>
+          <div id="adminContent"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
