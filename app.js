@@ -1,9 +1,3 @@
-const STORAGE_KEY = "followupSurvey.v20260522.responses";
-const MOCK_LOGIN = {
-  id: "nakamura",
-  password: "mvp-preview",
-};
-
 const SERVICE_INTERESTS = [
   "今はまだ結構です、自分で進めてみます",
   "個別相談を希望",
@@ -13,73 +7,13 @@ const SERVICE_INTERESTS = [
   "その他",
 ];
 
-const SAMPLE_RESPONSES = [
-  {
-    id: "sample-1",
-    created_at: "2026-05-22T10:12:00.000Z",
-    name: "山田 花子",
-    company: "山田デザイン事務所",
-    email: "hanako@example.com",
-    industry: "個人事業・ひとり社長",
-    industry_other: "",
-    impression: "AIで提案書のたたき台を作ってから、人間が整える流れが印象に残りました。",
-    ai_use_scene: "問い合わせ後の返信文、見積の前段階の整理、SNS投稿の下書きに使えそうです。",
-    tedious_task: "毎回似たような問い合わせ返信と、相談内容の整理に時間がかかっています。",
-    task_frequency: "週に数回",
-    ai_concern: "個人情報をどこまで入れてよいか、間違った回答を信じてしまわないかが不安です。",
-    next_trial: "まずは過去の問い合わせをもとに、返信テンプレートを作ってみたいです。",
-    service_interest: ["個別相談を希望", "3回コース勉強会に興味がある"],
-    service_interest_other: "",
-    support_message: "今日の内容はかなり現実的で、自分でも試せそうでした。",
-    testimonial_permission: "イニシャル・匿名ならOK",
-    privacy_consent: true,
-  },
-  {
-    id: "sample-2",
-    created_at: "2026-05-22T11:35:00.000Z",
-    name: "佐藤 一郎",
-    company: "サトウ製作所",
-    email: "sato@example.com",
-    industry: "製造",
-    industry_other: "",
-    impression: "小さな業務からAI化してよい、という話がわかりやすかったです。",
-    ai_use_scene: "社内向けの作業手順書づくりと、メール文面の作成に使えそうです。",
-    tedious_task: "発注内容を確認して、社内共有用にまとめ直す作業です。",
-    task_frequency: "毎日",
-    ai_concern: "社員にどう説明すれば使ってもらえるかが不安です。",
-    next_trial: "1つの定型メールをAIで作り直してみます。",
-    service_interest: ["1日集中コースに興味がある", "3か月〜半年伴走に興味がある"],
-    service_interest_other: "",
-    support_message: "",
-    testimonial_permission: "お名前つきで紹介OK",
-    privacy_consent: true,
-  },
-  {
-    id: "sample-3",
-    created_at: "2026-05-22T13:20:00.000Z",
-    name: "田中 美咲",
-    company: "tanaka salon",
-    email: "misaki@example.com",
-    industry: "サービス",
-    industry_other: "",
-    impression: "SNS投稿も、いきなり完成を目指さず素材整理から始めてよいとわかりました。",
-    ai_use_scene: "Instagram投稿のネタ出し、ブログの見出し作りに使えそうです。",
-    tedious_task: "投稿ネタを考える作業が毎回止まります。",
-    task_frequency: "週1回",
-    ai_concern: "自分らしさがなくならないかが気になります。",
-    next_trial: "投稿案を10個出してもらい、自分の言葉に直すところからやります。",
-    service_interest: ["今はまだ結構です、自分で進めてみます"],
-    service_interest_other: "",
-    support_message: "また事例が聞けるとうれしいです。",
-    testimonial_permission: "紹介は控えてください",
-    privacy_consent: true,
-  },
-];
+const MAX_INPUT_LENGTH = 500;
 
 const state = {
   responses: [],
   activeView: "form",
   adminUnlocked: false,
+  loadingResponses: false,
   filters: {
     keyword: "",
     segment: "",
@@ -87,34 +21,136 @@ const state = {
   },
 };
 
+let supabaseClient = null;
+
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
-function init() {
-  loadResponses();
+/**
+ * Supabase クライアントを初期化する。
+ * @returns {boolean} 初期化に成功した場合 true
+ */
+function initSupabase() {
+  const config = window.SUPABASE_CONFIG;
+  if (!config?.url || !config?.anonKey || config.url.includes("YOUR_PROJECT_REF")) {
+    showSetupError("Supabase の設定が読み込めません。supabase-config.js を確認するか、HTTP サーバー経由で index.html を開いてください。");
+    return false;
+  }
+  if (!window.supabase?.createClient) {
+    showSetupError("Supabase ライブラリの読み込みに失敗しました。インターネット接続を確認してください。");
+    return false;
+  }
+  supabaseClient = window.supabase.createClient(config.url, config.anonKey);
+  return true;
+}
+
+/**
+ * Supabase クライアントが利用可能か確認する。
+ * @returns {boolean}
+ */
+function ensureSupabase() {
+  if (supabaseClient) return true;
+  alert("Supabase に接続できていません。ページを再読み込みして設定を確認してください。");
+  return false;
+}
+
+async function init() {
   setupNavigation();
   renderServiceChoices();
   setupConditionalFields();
+  setupInputLimits();
   setupSurveyForm();
   setupAdminLogin();
-}
 
-function loadResponses() {
+  if (!initSupabase()) return;
+
   try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    state.responses = Array.isArray(stored) ? stored.map(normalizeResponse) : cloneSamples();
-  } catch {
-    state.responses = cloneSamples();
+    await initAuth();
+  } catch (error) {
+    console.error(error);
+    showSetupError("Supabase への接続に失敗しました。ブラウザを再読み込みしてください。");
   }
-  saveResponses();
 }
 
-function cloneSamples() {
-  return SAMPLE_RESPONSES.map((response) => normalizeResponse({ ...response }));
+/**
+ * 画面上部にセットアップエラーを表示する。
+ * @param {string} message 表示メッセージ
+ */
+function showSetupError(message) {
+  const banner = $("#setupError");
+  if (!banner) return;
+  banner.textContent = message;
+  banner.hidden = false;
 }
 
-function saveResponses() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.responses));
+/**
+ * ログイン状態を復元し、認証変更を監視する。
+ */
+async function initAuth() {
+  const {
+    data: { session },
+  } = await supabaseClient.auth.getSession();
+  if (session) {
+    await unlockAdmin();
+  }
+
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    if (session) {
+      await unlockAdmin();
+    } else {
+      lockAdmin();
+    }
+  });
+}
+
+function lockAdmin() {
+  state.adminUnlocked = false;
+  state.responses = [];
+  state.loadingResponses = false;
+  state.filters = {
+    keyword: "",
+    segment: "",
+    interest: "",
+  };
+  $("#adminLock").hidden = false;
+  $("#adminApp").hidden = true;
+  $("#adminContent").innerHTML = "";
+  $("#loginForm")?.reset();
+}
+
+async function unlockAdmin() {
+  state.adminUnlocked = true;
+  $("#adminLock").hidden = true;
+  $("#adminApp").hidden = false;
+  await loadResponses();
+  if (state.activeView === "admin") renderAdmin();
+}
+
+/**
+ * Supabase から回答一覧を取得する。
+ */
+async function loadResponses() {
+  if (!state.adminUnlocked) return;
+
+  state.loadingResponses = true;
+  if (state.activeView === "admin") renderAdmin();
+
+  const { data, error } = await supabaseClient
+    .from("survey_responses")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (!state.adminUnlocked) return;
+
+  state.loadingResponses = false;
+
+  if (error) {
+    alert(`回答の取得に失敗しました: ${error.message}`);
+    return;
+  }
+
+  state.responses = (data || []).map(normalizeResponse);
+  if (state.activeView === "admin" && state.adminUnlocked) renderAdmin();
 }
 
 function switchView(viewName) {
@@ -175,10 +211,24 @@ function setupConditionalFields() {
   });
 }
 
+/**
+ * 回答フォームのテキスト入力に文字数上限を設定する。
+ */
+function setupInputLimits() {
+  $("#surveyForm")
+    .querySelectorAll("input[type='text'], input[type='email'], textarea")
+    .forEach((field) => {
+      field.maxLength = MAX_INPUT_LENGTH;
+    });
+}
+
 function setupSurveyForm() {
-  $("#surveyForm").addEventListener("submit", (event) => {
+  $("#surveyForm").addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (!ensureSupabase()) return;
+
     const form = event.currentTarget;
+    const submitButton = form.querySelector('button[type="submit"]');
     const formData = new FormData(form);
     const serviceInterest = formData.getAll("service_interest");
 
@@ -187,9 +237,7 @@ function setupSurveyForm() {
       return;
     }
 
-    const response = normalizeResponse({
-      id: `response-${Date.now()}`,
-      created_at: new Date().toISOString(),
+    const payload = {
       name: text(formData, "name"),
       company: text(formData, "company"),
       email: text(formData, "email"),
@@ -206,14 +254,29 @@ function setupSurveyForm() {
       support_message: text(formData, "support_message"),
       testimonial_permission: text(formData, "testimonial_permission"),
       privacy_consent: formData.get("privacy_consent") === "同意する",
-    });
+    };
 
-    state.responses.unshift(response);
-    saveResponses();
-    form.reset();
-    $("#industryOtherField").hidden = true;
-    $("#serviceOtherField").hidden = true;
-    switchView("complete");
+    submitButton.disabled = true;
+    submitButton.textContent = "送信中...";
+
+    try {
+      const { error } = await supabaseClient.from("survey_responses").insert(payload);
+
+      if (error) {
+        alert(`送信に失敗しました: ${error.message}`);
+        return;
+      }
+
+      form.reset();
+      $("#industryOtherField").hidden = true;
+      $("#serviceOtherField").hidden = true;
+      switchView("complete");
+    } catch (error) {
+      alert(`送信に失敗しました: ${error.message || "通信エラー"}`);
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = "回答を送信する";
+    }
   });
 }
 
@@ -234,27 +297,42 @@ function normalizeResponse(response) {
 }
 
 function setupAdminLogin() {
-  $("#loginForm").addEventListener("submit", (event) => {
+  $("#loginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    if ($("#loginId").value !== MOCK_LOGIN.id || $("#loginPassword").value !== MOCK_LOGIN.password) {
-      alert("IDまたはパスワードが違います。");
-      return;
+    if (!ensureSupabase()) return;
+
+    const submitButton = $("#loginForm button[type='submit']");
+    const email = $("#loginEmail").value.trim();
+    const password = $("#loginPassword").value;
+
+    submitButton.disabled = true;
+    submitButton.textContent = "ログイン中...";
+
+    try {
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        alert("メールアドレスまたはパスワードが違います。");
+      }
+    } catch (error) {
+      alert(`ログインに失敗しました: ${error.message || "通信エラー"}`);
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = "ログイン";
     }
-    state.adminUnlocked = true;
-    $("#adminLock").hidden = true;
-    $("#adminApp").hidden = false;
-    renderAdmin();
   });
 
   $("#exportCsv").addEventListener("click", exportCsv);
-  $("#reloadMockData").addEventListener("click", () => {
-    state.responses = cloneSamples();
-    saveResponses();
-    renderAdmin();
+  $("#reloadResponses").addEventListener("click", () => loadResponses());
+  $("#logoutButton").addEventListener("click", async () => {
+    lockAdmin();
+    await supabaseClient.auth.signOut();
   });
 }
 
 function renderAdmin() {
+  if (!state.adminUnlocked) return;
+
   $("#adminContent").innerHTML = `
     ${summaryHtml()}
     ${filtersHtml()}
@@ -269,7 +347,7 @@ function summaryHtml() {
   const consent = state.responses.filter((response) => response.privacy_consent).length;
   return `
     <section class="panel stat-panel">
-      <div class="stat"><span>回答数</span><strong>${state.responses.length}</strong></div>
+      <div class="stat"><span>回答数</span><strong>${state.loadingResponses ? "..." : state.responses.length}</strong></div>
       <div class="stat"><span>個別相談</span><strong>${consultation}</strong></div>
       <div class="stat"><span>提案候補</span><strong>${proposal}</strong></div>
       <div class="stat"><span>同意済み</span><strong>${consent}</strong></div>
@@ -296,6 +374,14 @@ function filtersHtml() {
 }
 
 function responsesHtml(responses) {
+  if (state.loadingResponses) {
+    return `
+      <section class="panel empty-state">
+        <h3>回答を読み込み中...</h3>
+      </section>
+    `;
+  }
+
   if (!responses.length) {
     return `
       <section class="panel empty-state">

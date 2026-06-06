@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
+    <div id="setupError" class="setup-error" hidden role="alert"></div>
     <header class="app-header">
       <div>
         <p class="eyebrow">Seminar follow-up</p>
@@ -203,8 +204,8 @@
           <h2 id="adminTitle">回答管理</h2>
           <form id="loginForm" class="login-form">
             <label>
-              ID
-              <input id="loginId" type="text" autocomplete="username" required />
+              メールアドレス
+              <input id="loginEmail" type="email" autocomplete="username" required />
             </label>
             <label>
               パスワード
@@ -221,8 +222,9 @@
               <h2>回答一覧</h2>
             </div>
             <div class="toolbar-actions">
-              <button id="reloadMockData" class="secondary" type="button">サンプル復元</button>
+              <button id="reloadResponses" class="secondary" type="button">再読み込み</button>
               <button id="exportCsv" class="primary" type="button">CSV出力</button>
+              <button id="logoutButton" class="secondary" type="button">ログアウト</button>
             </div>
           </section>
           <div id="adminContent"></div>
@@ -230,6 +232,8 @@
       </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="./supabase-config.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>
